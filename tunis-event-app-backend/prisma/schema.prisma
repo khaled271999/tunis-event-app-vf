@@ -1,0 +1,111 @@
+// 1. Schéma Prisma (prisma/schema.prisma)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPERADMIN
+  ORGANISATEUR
+  PARTICIPANT
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  password       String
+  name           String
+  role           Role
+  refreshToken   String?
+  events         Event[]         @relation("OrganizedEvents")
+  participations Participation[]
+  comments       Comment[]
+  organization   Organization?
+  createdAt      DateTime        @default(now())
+}
+
+model Organization {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  additionalInfo Json?
+  image          Json?
+  subdomain      String
+  published      Boolean      @default(false)
+  approved       Boolean      @default(false)
+  umamiSettings  Json?
+  userId         String       @unique
+  user           User         @relation(fields: [userId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  events         Event[]
+  projections    Projection[]
+}
+
+model Event {
+  id             String          @id @default(uuid())
+  key            String          @unique
+  isExt          Boolean         @default(false)
+  name           String
+  description    String
+  startDate      DateTime
+  endDate        DateTime
+  venue          Json
+  hiddenVenue    Boolean         @default(false)
+  image          Json
+  link           String
+  tags           String
+  type           String
+  theme          Json
+  badges         Json
+  status         String? // pending | approved | rejected
+  organizerId    String
+  organizer      User            @relation("OrganizedEvents", fields: [organizerId], references: [id])
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  projections    Projection[]
+  participations Participation[]
+  comments       Comment[]
+  validated      Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+}
+
+model Projection {
+  id             String       @id @default(uuid())
+  date           DateTime
+  tags           String[]
+  eventId        String
+  event          Event        @relation(fields: [eventId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+}
+
+model Participation {
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  user      User     @relation(fields: [userId], references: [id])
+  event     Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  rating    Int
+  userId    String
+  eventId   String
+  user      User     @relation(fields: [userId], references: [id])
+  event     Event    @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+}

@@ -1,0 +1,7 @@
+{
+  "name": "tunis-event-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}

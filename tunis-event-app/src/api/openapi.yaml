@@ -1,0 +1,156 @@
+openapi: 3.0.0
+info:
+  title: "Tunis Events API"
+  version: "1.0.0"
+  description: "API publique pour les événements de Tunis."
+
+servers:
+  - url: "https://api.tunis.events"
+
+paths:
+  /public/events:
+    get:
+      summary: "Obtenir la liste des événements"
+      description: "Retourne une liste d'événements."
+      operationId: "getEvents"
+      responses:
+        "200":
+          description: "Liste des événements"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+
+components:
+  schemas:
+    Event:
+      type: object
+      properties:
+        key:
+          type: string
+        id:
+          type: string
+        isExt:
+          type: boolean
+        name:
+          type: string
+        description:
+          type: string
+        organization:
+          $ref: "#/components/schemas/Organization"
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        venue:
+          $ref: "#/components/schemas/Venue"
+        hiddenVenue:
+          type: boolean
+        image:
+          $ref: "#/components/schemas/Image"
+        link:
+          type: string
+          format: uri
+        tags:
+          type: string
+        type:
+          type: string
+        theme:
+          type: object
+        badges:
+          $ref: "#/components/schemas/Badges"
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        additionalInformation:
+          type: object
+          properties:
+            infoPhone:
+              type: string
+            resaPhone:
+              type: string
+            adminPhone:
+              type: string
+            afterSalePhone:
+              type: string
+              nullable: true
+            facebookPageUrl:
+              type: string
+              format: uri
+        categories:
+          type: array
+          items:
+            type: string
+          nullable: true
+        image:
+          $ref: "#/components/schemas/Image"
+        subdomain:
+          type: string
+        published:
+          type: boolean
+
+    Venue:
+      type: object
+      properties:
+        name:
+          type: string
+        rating:
+          type: number
+          format: float
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        formatted_address:
+          type: string
+
+    Image:
+      type: object
+      properties:
+        path:
+          type: string
+        size:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+        filename:
+          type: string
+        mimetype:
+          type: string
+
+    Badges:
+      type: object
+      properties:
+        approvalRequired:
+          type: boolean
+        noTickets:
+          type: boolean
+        hiddenTickets:
+          type: boolean
+        prices:
+          type: array
+          items:
+            type: number
+            format: float
+        cashless:
+          type: boolean
+        almostFull:
+          type: boolean
+        completelySold:
+          type: boolean
