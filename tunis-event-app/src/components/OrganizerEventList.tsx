@@ -15,6 +15,7 @@ import {
 import { extractFormattedText } from "@/lib/extractFormattedText";
 import AppBackground from "@/theme/AppBackground";
 import BackIconButton from "./ui/BackIconButton";
+import { fetchCombinedEvents } from "@/services/eventService";
 
 interface OrganizerEventListProps {
   isOpen: boolean;
@@ -36,13 +37,13 @@ const OrganizerEventList: React.FC<OrganizerEventListProps> = ({
   const fetchOrganizerData = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchWithCache("/public/events");
+      const data = await fetchCombinedEvents();
 
-      if (!data?.data || !Array.isArray(data.data)) {
+      if (!data || !Array.isArray(data)) {
         throw new Error("Données invalides reçues");
       }
 
-      const filteredEvents = data.data.filter(
+      const filteredEvents = data.filter(
         (event: Event) => event.organization.id === organizerId
       );
       setEvents(filteredEvents);

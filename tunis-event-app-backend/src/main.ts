@@ -1,37 +1,35 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 
-// 🔐 Swagger modules
-import { SwaggerModule, DocumentBuilder, OpenAPIObject } from '@nestjs/swagger';
+// 👉 IMPORT SWAGGER
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { cors: true });
+
+  // 👉 CORS + VALIDATION
   app.enableCors({
-    origin: 'http://localhost:8100',
+    origin: '*', // ⚠️ à restreindre en prod si nécessaire
     credentials: true,
   });
-
   app.useGlobalPipes(
     new ValidationPipe({
+      transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
-      transform: true,
     }),
   );
 
-  // 🛡️ Typage explicite pour éviter les erreurs "unsafe"
-  const swaggerConfig = new DocumentBuilder()
+  // 👉 SWAGGER CONFIGURATION
+  const config = new DocumentBuilder()
     .setTitle('Tunis Events API')
-    .setDescription('API pour les événements avec authentification')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build() as OpenAPIObject;
+    .setDescription('API publique pour les événements de Tunis.')
+    .setVersion('1.0.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document); // Swagger UI => http://localhost:3000/api
 
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-
-  SwaggerModule.setup('api', app, swaggerDocument);
-
-  await app.listen(3000);
+  await app.listen(3000, '0.0.0.0', () => console.log('API OK'));
 }
 bootstrap();

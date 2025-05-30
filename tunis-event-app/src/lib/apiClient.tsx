@@ -1,10 +1,33 @@
-// integ SDK
-import { Configuration, DefaultApi } from "@/api-sdk";
+import { OpenAPI } from "@/api-sdk-backend/core/OpenAPI";
+import { API_BASE_URL } from "@/config"; // 👈 chemin à adapter si besoin
 
-const api = new DefaultApi(
-  new Configuration({
-    basePath: "https://api.tunis.events",
-  })
-);
+import { AuthService } from "@/api-sdk-backend/services/AuthService";
+import { EventsService } from "@/api-sdk-backend/services/EventsService";
+import { OrganizationService } from "@/api-sdk-backend/services/OrganizationService";
+import { ProfileService } from "@/api-sdk-backend/services/ProfileService";
+import { SuperAdminService } from "@/api-sdk-backend/services/SuperAdminService";
 
-export default api;
+// ✅ Définir dynamiquement selon plateforme (mobile vs navigateur)
+OpenAPI.BASE = API_BASE_URL;
+
+// ✅ Setter optionnel pour le token
+export const setAuthToken = (token: string) => {
+  OpenAPI.TOKEN = token;
+};
+
+// ✅ Export regroupé
+export default {
+  AuthService,
+  EventsService,
+  OrganizationService,
+  ProfileService,
+  SuperAdminService,
+};
+
+export {
+  AuthService,
+  EventsService,
+  OrganizationService,
+  ProfileService,
+  SuperAdminService,
+};

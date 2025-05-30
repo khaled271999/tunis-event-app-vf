@@ -7,6 +7,8 @@ export type RegisterOrganisateurDto = {
     password: string;
     name: string;
     role: RegisterOrganisateurDto.role;
+    orgName: string;
+    orgDescription?: string;
 };
 export namespace RegisterOrganisateurDto {
     export enum role {

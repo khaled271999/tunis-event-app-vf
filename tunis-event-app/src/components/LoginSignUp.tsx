@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { AuthService } from "@/api-sdk-backend";
+import {
+  AuthService,
+  OpenAPI,
+  RegisterOrganisateurDto,
+} from "@/api-sdk-backend";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,8 +18,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OfflineStatus from "./OfflineStatus";
-import { Role } from "../constants/roles";
+import { API_BASE_URL } from "@/config";
 
+OpenAPI.BASE = API_BASE_URL;
+console.log("✅ OpenAPI.BASE =", OpenAPI.BASE);
 export function LoginSignUp() {
   const { login } = useAuth();
   const history = useHistory();
@@ -24,7 +30,9 @@ export function LoginSignUp() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  const [signupRole, setSignupRole] = useState<Role>(Role.PARTICIPANT);
+  const [signupRole, setSignupRole] = useState<RegisterOrganisateurDto.role>(
+    RegisterOrganisateurDto.role.PARTICIPANT
+  );
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
@@ -45,13 +53,13 @@ export function LoginSignUp() {
 
       switch (role) {
         case "SUPERADMIN":
-          history.push("/admin/dashboard");
+          history.push("/");
           break;
         case "ORGANISATEUR":
-          history.push("/organisateur/events");
+          history.push("/");
           break;
         case "PARTICIPANT":
-          history.push("/events");
+          history.push("/");
           break;
         default:
           history.push("/");
@@ -72,14 +80,14 @@ export function LoginSignUp() {
     }
 
     try {
-      if (signupRole === Role.ORGANISATEUR) {
+      if (signupRole === RegisterOrganisateurDto.role.ORGANISATEUR) {
         await AuthService.authControllerRegisterOrganisateur({
           name: signupName,
           email: signupEmail,
           password: signupPassword,
           orgName: signupOrgName,
           orgDescription: signupOrgDesc,
-          role: Role.ORGANISATEUR,
+          role: signupRole,
         });
       } else {
         await AuthService.authControllerRegister({
@@ -173,11 +181,15 @@ export function LoginSignUp() {
                   <Label htmlFor="signup-role">Rôle</Label>
                   <select
                     value={signupRole}
-                    onChange={(e) => setSignupRole(e.target.value as Role)}
+                    onChange={(e) =>
+                      setSignupRole(
+                        e.target.value as RegisterOrganisateurDto.role
+                      )
+                    }
                     className="w-full rounded-lg p-2 border"
                   >
-                    <option value={Role.PARTICIPANT}>Participant</option>
-                    <option value={Role.ORGANISATEUR}>Organisateur</option>
+                    <option value="PARTICIPANT">Participant</option>
+                    <option value="ORGANISATEUR">Organisateur</option>
                   </select>
                 </div>
 
@@ -215,7 +227,7 @@ export function LoginSignUp() {
                   </div>
                 </div>
 
-                {signupRole === Role.ORGANISATEUR && (
+                {signupRole === RegisterOrganisateurDto.role.ORGANISATEUR && (
                   <>
                     <div className="space-y-1">
                       <Label>Nom de l'organisation</Label>

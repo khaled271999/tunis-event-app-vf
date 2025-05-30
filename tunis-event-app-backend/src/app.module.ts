@@ -5,7 +5,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { OrganizationModule } from './modules/organization/organization.module';
-
+import { EventsModule } from './modules/events/events.module';
+import { SuperAdminModule } from './modules/superadmin/superadmin.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -14,6 +15,8 @@ import { OrganizationModule } from './modules/organization/organization.module';
     AuthModule,
     UsersModule,
     OrganizationModule,
+    EventsModule,
+    SuperAdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

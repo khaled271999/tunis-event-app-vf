@@ -16,8 +16,8 @@ export class RegisterDto {
   name!: string;
 
   @ApiProperty({ enum: Role })
-  @IsEnum(['SUPERADMIN', 'ORGANISATEUR', 'PARTICIPANT'], {
+  @IsEnum(Role, {
     message: 'Invalid role',
   })
-  role!: 'SUPERADMIN' | 'ORGANISATEUR' | 'PARTICIPANT';
+  role!: Role;
 }

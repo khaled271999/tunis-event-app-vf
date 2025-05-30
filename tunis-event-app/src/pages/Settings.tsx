@@ -21,6 +21,8 @@ import EditProfileModal from "@/components/SettingsComponents/EditProfileModal";
 import CreditCardModal from "@/components/SettingsComponents/CreditCardModal";
 import AddressModal from "@/components/SettingsComponents/AddressModal";
 import PaymentMethodModal from "@/components/SettingsComponents/PaymentMethodModal";
+import { LoginSignUp } from "@/components/LoginSignUp";
+import { SettingsComponent } from "@/components/SettingsComponent";
 
 const Settings: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -50,85 +52,7 @@ const Settings: React.FC = () => {
       <IonContent fullscreen className="ion-padding bg-transparent">
         <OfflineStatus />
 
-        <div className="max-w-md mx-auto space-y-6 pt-4">
-          <UserHeader onClick={() => setEditProfileOpen(true)} />
-          <EditProfileModal
-            isOpen={editProfileOpen}
-            onClose={() => setEditProfileOpen(false)}
-          />
-          <CreditCardModal
-            isOpen={creditModalOpen}
-            onClose={() => setCreditModalOpen(false)}
-          />
-          <AddressModal
-            isOpen={addressModalOpen}
-            onClose={() => setAddressModalOpen(false)}
-          />
-          <PaymentMethodModal
-            isOpen={paymentModalOpen}
-            onClose={() => setPaymentModalOpen(false)}
-          />
-
-          <SettingsSection
-            items={[
-              {
-                label: "Carte de crédit",
-                onClick: () => setCreditModalOpen(true),
-              },
-              {
-                label: "Adresse ",
-                onClick: () => setAddressModalOpen(true),
-              },
-              {
-                label: "Méthode de paiement",
-                onClick: () => setPaymentModalOpen(true),
-              },
-            ]}
-          />
-
-          <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow divide-y divide-gray-200">
-            <SettingsSwitchItem
-              label="Services de localisation"
-              value={locationEnabled}
-              onChange={setLocationEnabled}
-              danger
-            />
-            <SettingsSwitchItem
-              label="Notifications"
-              value={notificationsEnabled}
-              onChange={setNotificationsEnabled}
-            />
-          </div>
-
-          <SettingsSection
-            items={[
-              {
-                label: "Aide & Support",
-                onClick: () => openModal("Aide & Support"),
-              },
-              {
-                label: "Donner un avis",
-                onClick: () => openModal("Donner un avis"),
-              },
-              {
-                label: "Conditions d'utilisation",
-                onClick: () => openModal("Conditions d'utilisation"),
-              },
-            ]}
-          />
-
-          <button className="w-full py-3 rounded-full border border-red-500 text-red-500 hover:bg-red-100 font-semibold transition">
-            Se Déconnecter
-          </button>
-
-          <SettingsModal
-            open={modalOpen}
-            onOpenChange={setModalOpen}
-            title={modalTitle}
-          >
-            <p>Contenu pour "{modalTitle}" ici...</p>
-          </SettingsModal>
-        </div>
+        <SettingsComponent />
       </IonContent>
     </IonPage>
   );

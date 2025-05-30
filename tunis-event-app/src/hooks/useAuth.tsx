@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { AuthService } from "../api-sdk-backend";
 import type { LoginDto } from "../api-sdk-backend";
 import { OpenAPI } from "../api-sdk-backend";
+import { API_BASE_URL } from "../config";
 
 interface TokenPayload {
   sub: string;
@@ -10,9 +11,15 @@ interface TokenPayload {
   role: "SUPERADMIN" | "ORGANISATEUR" | "PARTICIPANT";
 }
 
+type User = {
+  userId: string;
+  email: string;
+  role: TokenPayload["role"];
+};
+
 interface AuthContextType {
   token: string | null;
-  role: TokenPayload["role"] | null;
+  user: User | null;
   login: (dto: LoginDto) => Promise<TokenPayload["role"] | null>;
   logout: () => void;
 }
@@ -23,34 +30,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("token")
   );
-  const [role, setRole] = useState<TokenPayload["role"] | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     if (token) {
       try {
         const decoded = jwtDecode<TokenPayload>(token);
-        setRole(decoded.role);
+        setUser({
+          userId: decoded.sub,
+          email: decoded.email,
+          role: decoded.role,
+        });
       } catch (err) {
         console.error("Erreur de décodage du token :", err);
-        logout(); // au cas où le token est invalide
+        logout();
       }
     } else {
-      setRole(null);
+      setUser(null);
     }
   }, [token]);
+  useEffect(() => {
+    OpenAPI.BASE = API_BASE_URL;
+    console.log("✅ OpenAPI.BASE =", OpenAPI.BASE);
+  }, []);
 
   const login = async (dto: LoginDto): Promise<TokenPayload["role"] | null> => {
     try {
-      OpenAPI.BASE = "http://localhost:3000";
       const result = await AuthService.authControllerLogin({
         email: dto.email,
         password: dto.password,
       });
+
       const accessToken = result.access_token;
       localStorage.setItem("token", accessToken);
       setToken(accessToken);
 
       const decoded = jwtDecode<TokenPayload>(accessToken);
+      setUser({
+        userId: decoded.sub,
+        email: decoded.email,
+        role: decoded.role,
+      });
+
       return decoded.role;
     } catch (error) {
       console.error("Erreur de connexion :", error);
@@ -61,11 +82,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
-    setRole(null);
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ token, role, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

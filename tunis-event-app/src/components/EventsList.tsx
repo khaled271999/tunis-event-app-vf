@@ -8,6 +8,7 @@ import { IonRefresher, IonRefresherContent } from "@ionic/react";
 import { Calendar } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { fetchCombinedEvents } from "@/services/eventService";
 
 interface EventsListProps {
   className?: string;
@@ -22,9 +23,8 @@ const EventsList: React.FC<EventsListProps> = ({ className }) => {
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchWithCache("/public/events");
-      const validEvents = Array.isArray(data?.data) ? data.data : [];
-      setEvents(validEvents);
+      const events = await fetchCombinedEvents();
+      setEvents(events);
       setError(false);
     } catch (error) {
       console.error("Error fetching events:", error);

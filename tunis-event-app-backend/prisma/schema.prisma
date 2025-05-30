@@ -75,6 +75,7 @@ model Event {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
+  approved       Boolean  @default(false)
 }
 
 model Projection {

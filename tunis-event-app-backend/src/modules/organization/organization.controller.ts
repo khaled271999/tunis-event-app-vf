@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   UseGuards,
   Request,
@@ -8,20 +9,41 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtPayloadRequest } from '../auth/types/jwt-payload-request';
+import { AuthenticatedRequest } from '../../common/interfaces/AuthenticatedRequest';
 
-@ApiTags('organization')
-@ApiBearerAuth()
-@Controller('organization')
+@Controller('organisateur')
 export class OrganizationController {
   constructor(private prisma: PrismaService) {}
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ORGANISATEUR)
+  @Get('mes-evenements')
+  async getMyEvents(@Request() req: AuthenticatedRequest) {
+    const userId = req.user.userId;
+
+    const events = await this.prisma.event.findMany({
+      where: {
+        organizerId: userId,
+        deletedAt: null,
+      },
+      include: {
+        organization: true,
+        participations: true,
+        comments: true,
+      },
+    });
+
+    return events;
+  }
+
   @UseGuards(JwtAuthGuard)
-  @Post()
-  async create(
-    @Request() req: JwtPayloadRequest,
+  @Post('/create-organization') // <- pour plus de clarté
+  async createOrganization(
+    @Request() req: AuthenticatedRequest,
     @Body() body: { name: string; description?: string },
   ) {
     try {
@@ -47,7 +69,6 @@ export class OrganizationController {
         },
       });
 
-      // ✅ Retour clair
       return {
         message: 'Organisation créée avec succès',
         organization: {

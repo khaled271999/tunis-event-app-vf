@@ -10,10 +10,20 @@ export class OrganizationService {
      * @returns any
      * @throws ApiError
      */
-    public static organizationControllerCreate(): CancelablePromise<any> {
+    public static organizationControllerGetMyEvents(): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/organisateur/mes-evenements',
+        });
+    }
+    /**
+     * @returns any
+     * @throws ApiError
+     */
+    public static organizationControllerCreateOrganization(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/organization',
+            url: '/organisateur/create-organization',
         });
     }
 }

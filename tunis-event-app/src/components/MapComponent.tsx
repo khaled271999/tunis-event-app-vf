@@ -9,6 +9,8 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
+import { fetchCombinedEvents } from "@/services/eventService";
+
 // ✅ Fix pour Leaflet Icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -49,27 +51,24 @@ const MapComponent: React.FC<MapComponentProps> = ({ event }) => {
     const fetchEvents = async () => {
       if (!event) {
         try {
-          const data = await fetchWithCache("/public/events");
+          const combinedEvents = await fetchCombinedEvents();
           setEvents(
-            Array.isArray(data?.data)
-              ? data.data
-                  .filter(
-                    (e: Event) =>
-                      e.venue && e.venue.latitude && e.venue.longitude
-                  )
-                  .map((e: Event) => ({
-                    name: e.name,
-                    venue: {
-                      name: e.venue.name ?? "Lieu inconnu",
-                      formatted_address:
-                        e.venue.formatted_address ?? "Adresse inconnue",
-                      latitude: e.venue.latitude,
-                      longitude: e.venue.longitude,
-                      rating: e.venue.rating ?? 0,
-                      address_components: e.venue.address_components ?? [],
-                    },
-                  }))
-              : []
+            combinedEvents
+              .filter(
+                (e: Event) => e.venue && e.venue.latitude && e.venue.longitude
+              )
+              .map((e: Event) => ({
+                name: e.name,
+                venue: {
+                  name: e.venue.name ?? "Lieu inconnu",
+                  formatted_address:
+                    e.venue.formatted_address ?? "Adresse inconnue",
+                  latitude: e.venue.latitude,
+                  longitude: e.venue.longitude,
+                  rating: e.venue.rating ?? 0,
+                  address_components: e.venue.address_components ?? [],
+                },
+              }))
           );
         } catch (error) {
           console.error("❌ Erreur chargement événements:", error);

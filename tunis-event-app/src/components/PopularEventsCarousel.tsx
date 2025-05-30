@@ -7,6 +7,7 @@ import { Event } from "@/types/event";
 import { fetchWithCache } from "@/lib/fetchWithCache";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { fetchCombinedEvents } from "@/services/eventService";
 
 const PopularEventsCarousel: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -17,8 +18,8 @@ const PopularEventsCarousel: React.FC = () => {
   const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchWithCache("/public/events/popular");
-      setEvents(Array.isArray(data?.data) ? data.data : []);
+      const events = await fetchCombinedEvents();
+      setEvents(events);
       setError(false);
     } catch (error) {
       console.error("Error fetching events:", error);

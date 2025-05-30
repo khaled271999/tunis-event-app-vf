@@ -9,95 +9,154 @@ import {
   setupIonicReact,
 } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
-import {
-  compass,
-  home,
-  notifications,
-  person,
-  search,
-  settings,
-  ticket,
-} from "ionicons/icons";
+import { compass, home, list, logIn, person, settings } from "ionicons/icons";
 import Home from "./pages/Home";
 import DiscoverPage from "./pages/DiscoverPage";
 import Settings from "./pages/Settings";
 import Ticket from "./pages/Ticket";
-import "@ionic/react/css/core.css";
+import LoginPage from "./pages/LoginPage";
+import AdminPage from "./pages/AdminPages";
+import AppBackground from "./theme/AppBackground";
+import { useAuth } from "./hooks/useAuth";
 
-/* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
-
-/* Basic CSS for apps built with Ionic */
 import "@ionic/react/css/normalize.css";
 import "@ionic/react/css/structure.css";
 import "@ionic/react/css/typography.css";
-
-/* Optional CSS utils that can be commented out */
 import "@ionic/react/css/padding.css";
 import "@ionic/react/css/float-elements.css";
 import "@ionic/react/css/text-alignment.css";
 import "@ionic/react/css/text-transformation.css";
 import "@ionic/react/css/flex-utils.css";
 import "@ionic/react/css/display.css";
-
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
-
-/* import '@ionic/react/css/palettes/dark.always.css'; */
-/* import '@ionic/react/css/palettes/dark.class.css'; */
 import "@ionic/react/css/palettes/dark.system.css";
-
-/* Theme variables */
 import "./theme/variables.css";
-import AppBackground from "./theme/AppBackground";
-
-// night mode
+import OrganizerPage from "./pages/OrganizerPage";
+import ParticipantPage from "./pages/ParticipantPage";
 
 setupIonicReact();
 
 const App: React.FC = () => {
+  const { user } = useAuth();
+  console.log("USER DETECTED", user);
+
+  // 🌀 Étape de chargement initial (token en cours de décodage)
+  if (user === undefined) {
+    return (
+      <IonApp>
+        <AppBackground blurhash="L-Cuh^nhV@jZ.ToyWEoJx@a$kDoL" />
+        <div className="flex items-center justify-center h-screen text-xl font-semibold text-gray-700">
+          Chargement...
+        </div>
+      </IonApp>
+    );
+  }
+
   return (
     <IonApp>
-      <AppBackground blurhash="L-Cuh^nhV@jZ.ToyWEoJx@a$kDoL" />{" "}
-      {/* Utilise un Blurhash par défaut */}
+      <AppBackground blurhash="L-Cuh^nhV@jZ.ToyWEoJx@a$kDoL" />
       <IonReactRouter>
-        <IonTabs>
-          <IonRouterOutlet>
-            <Route exact path="/home">
-              <Home />
-            </Route>
-            <Route exact path="/discoverPage">
-              <DiscoverPage />
-            </Route>
-            <Route path="/settings">
-              <Settings />
-            </Route>
-            <Route path="/ticket">
-              <Ticket />
-            </Route>
-            <Route exact path="/">
-              <Redirect to="home" />
-            </Route>
-          </IonRouterOutlet>
-          <IonTabBar slot="bottom">
-            <IonTabButton tab="home" href="/home">
-              <IonIcon aria-hidden="true" icon={home} />
-            </IonTabButton>
-            <IonTabButton tab="discoverPage" href="/discoverPage">
-              <IonIcon aria-hidden="true" icon={compass} />
-            </IonTabButton>
-            <IonTabButton tab="ticket" href="/ticket">
-              <IonIcon aria-hidden="true" icon={ticket} />
-            </IonTabButton>
-            <IonTabButton tab="settings" href="/settings">
-              <IonIcon aria-hidden="true" icon={settings} />
-            </IonTabButton>
-          </IonTabBar>
-        </IonTabs>
+        {!user ? (
+          <IonTabs>
+            <IonRouterOutlet>
+              <Route exact path="/home" component={Home} />
+              <Route exact path="/discoverPage" component={DiscoverPage} />
+              <Route exact path="/loginsignup" component={LoginPage} />
+              <Redirect exact from="/" to="/home" />
+            </IonRouterOutlet>
+            <IonTabBar slot="bottom">
+              <IonTabButton tab="home" href="/home">
+                <IonIcon icon={home} />
+              </IonTabButton>
+              <IonTabButton tab="discoverPage" href="/discoverPage">
+                <IonIcon icon={compass} />
+              </IonTabButton>
+              <IonTabButton tab="loginsignup" href="/loginsignup">
+                <IonIcon icon={logIn} />
+              </IonTabButton>
+            </IonTabBar>
+          </IonTabs>
+        ) : user.role === "SUPERADMIN" ? (
+          <IonTabs>
+            <IonRouterOutlet>
+              <Route exact path="/home" component={Home} />
+              <Route exact path="/discoverPage" component={DiscoverPage} />
+              <Route exact path="/settings" component={Settings} />
+              <Route exact path="/adminpage" component={AdminPage} />
+              <Redirect exact from="/" to="/settings" />
+            </IonRouterOutlet>
+            <IonTabBar slot="bottom">
+              <IonTabButton tab="home" href="/home">
+                <IonIcon icon={home} />
+              </IonTabButton>
+              <IonTabButton tab="discoverPage" href="/discoverPage">
+                <IonIcon icon={compass} />
+              </IonTabButton>
+              <IonTabButton tab="adminpage" href="/adminpage">
+                <IonIcon icon={list} />
+              </IonTabButton>
+              <IonTabButton tab="settings" href="/settings">
+                <IonIcon icon={settings} />
+              </IonTabButton>
+            </IonTabBar>
+          </IonTabs>
+        ) : user.role === "ORGANISATEUR" ? (
+          <IonTabs>
+            <IonRouterOutlet>
+              <Route exact path="/home" component={Home} />
+              <Route exact path="/discoverPage" component={DiscoverPage} />
+              <Route exact path="/settings" component={Settings} />
+              <Route exact path="/OrganizerPage" component={OrganizerPage} />
+              <Redirect exact from="/" to="/settings" />
+            </IonRouterOutlet>
+            <IonTabBar slot="bottom">
+              <IonTabButton tab="home" href="/home">
+                <IonIcon icon={home} />
+              </IonTabButton>
+              <IonTabButton tab="discoverPage" href="/discoverPage">
+                <IonIcon icon={compass} />
+              </IonTabButton>
+              <IonTabButton tab="OrganizerPage" href="/OrganizerPage">
+                <IonIcon icon={list} />
+              </IonTabButton>
+              <IonTabButton tab="settings" href="/settings">
+                <IonIcon icon={settings} />
+              </IonTabButton>
+            </IonTabBar>
+          </IonTabs>
+        ) : user.role === "PARTICIPANT" ? (
+          <IonTabs>
+            <IonRouterOutlet>
+              <Route exact path="/home" component={Home} />
+              <Route exact path="/discoverPage" component={DiscoverPage} />
+              <Route exact path="/settings" component={Settings} />
+              <Route
+                exact
+                path="/ParticipantPage"
+                component={ParticipantPage}
+              />
+              <Redirect exact from="/" to="/settings" />
+            </IonRouterOutlet>
+            <IonTabBar slot="bottom">
+              <IonTabButton tab="home" href="/home">
+                <IonIcon icon={home} />
+              </IonTabButton>
+              <IonTabButton tab="discoverPage" href="/discoverPage">
+                <IonIcon icon={compass} />
+              </IonTabButton>
+              <IonTabButton tab="ParticipantPage" href="/ParticipantPage">
+                <IonIcon icon={list} />
+              </IonTabButton>
+              <IonTabButton tab="settings" href="/settings">
+                <IonIcon icon={settings} />
+              </IonTabButton>
+            </IonTabBar>
+          </IonTabs>
+        ) : (
+          <div className="p-6 text-center text-lg text-gray-600">
+            Rôle non géré pour le moment.
+          </div>
+        )}
       </IonReactRouter>
     </IonApp>
   );

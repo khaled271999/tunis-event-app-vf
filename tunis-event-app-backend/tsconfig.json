@@ -18,7 +18,7 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "strict": true,
-    "types": ["node", "passport-jwt", "express"],
+    "types": ["node", "passport-jwt", "express", "jest"],
     "typeRoots": ["./node_modules/@types", "./src/types"]
   }
 }
