@@ -1,7 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
-import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest'; // ajuste le chemin si besoin
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -12,13 +12,25 @@ export class RolesGuard implements CanActivate {
       'roles',
       context.getHandler(),
     );
+
+    console.log('🔍 Required roles for route:', requiredRoles);
+
     if (!requiredRoles) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const { user } = request;
+    const user = request.user;
 
-    return requiredRoles.includes(user.role);
+    console.log('👤 User from request in RolesGuard:', user);
+
+    if (!user || !user.role) {
+      console.log('❌ Access denied: user or role missing');
+      return false;
+    }
+
+    const hasAccess = requiredRoles.includes(user.role);
+    console.log('✅ Role access check result:', hasAccess);
+    return hasAccess;
   }
 }

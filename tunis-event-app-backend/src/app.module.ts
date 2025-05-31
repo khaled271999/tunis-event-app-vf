@@ -7,6 +7,7 @@ import { UsersModule } from './modules/users/users.module';
 import { OrganizationModule } from './modules/organization/organization.module';
 import { EventsModule } from './modules/events/events.module';
 import { SuperAdminModule } from './modules/superadmin/superadmin.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -17,6 +18,7 @@ import { SuperAdminModule } from './modules/superadmin/superadmin.module';
     OrganizationModule,
     EventsModule,
     SuperAdminModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

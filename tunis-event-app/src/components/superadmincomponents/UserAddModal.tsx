@@ -14,25 +14,53 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import React, { useState } from "react";
+import { toast } from "sonner";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (user: { name: string; email: string; role: string }) => void;
+  onAdd: (user: any) => void; // adapt if needed
 }
 
 export default function UserAddModal({ isOpen, onClose, onAdd }: Props) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "Participant",
+    password: "",
+    role: "PARTICIPANT",
+    orgName: "",
+    orgDescription: "",
   });
 
-  const handleAdd = () => {
-    if (!formData.name || !formData.email || !formData.role) return;
-    onAdd(formData);
-    onClose();
-    setFormData({ name: "", email: "", role: "Participant" });
+  const handleAdd = async () => {
+    const { name, email, password, role, orgName, orgDescription } = formData;
+    if (!name || !email || !password || !role) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    const user: any = { name, email, password, role };
+    if (role === "ORGANISATEUR") {
+      user.orgName = orgName;
+      user.orgDescription = orgDescription;
+    }
+
+    try {
+      await onAdd(user); // doit être async
+      toast.success("Utilisateur ajouté avec succès");
+      onClose();
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        role: "PARTICIPANT",
+        orgName: "",
+        orgDescription: "",
+      });
+    } catch (error: any) {
+      toast.error("Échec de l’ajout de l’utilisateur");
+      console.error("Erreur pendant onAdd:", error);
+    }
   };
 
   return (
@@ -55,6 +83,14 @@ export default function UserAddModal({ isOpen, onClose, onAdd }: Props) {
               setFormData({ ...formData, email: e.target.value })
             }
           />
+          <Input
+            type="password"
+            placeholder="Mot de passe"
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+          />
           <Select
             value={formData.role}
             onValueChange={(value) => setFormData({ ...formData, role: value })}
@@ -63,11 +99,31 @@ export default function UserAddModal({ isOpen, onClose, onAdd }: Props) {
               <SelectValue placeholder="Rôle" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Participant">Participant</SelectItem>
-              <SelectItem value="Organisateur">Organisateur</SelectItem>
-              <SelectItem value="SuperAdmin">Super Admin</SelectItem>
+              <SelectItem value="PARTICIPANT">Participant</SelectItem>
+              <SelectItem value="ORGANISATEUR">Organisateur</SelectItem>
+              <SelectItem value="SUPERADMIN">Super Admin</SelectItem>
             </SelectContent>
           </Select>
+
+          {formData.role === "ORGANISATEUR" && (
+            <>
+              <Input
+                placeholder="Nom de l'organisation"
+                value={formData.orgName}
+                onChange={(e) =>
+                  setFormData({ ...formData, orgName: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Description (facultative)"
+                value={formData.orgDescription}
+                onChange={(e) =>
+                  setFormData({ ...formData, orgDescription: e.target.value })
+                }
+              />
+            </>
+          )}
+
           <div className="flex justify-end pt-4">
             <Button onClick={handleAdd}>Ajouter</Button>
           </div>

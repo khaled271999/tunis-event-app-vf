@@ -5,8 +5,7 @@ import AdminEvent from "@/components/superadmincomponents/AdminEvent";
 import AdminEventList from "@/components/superadmincomponents/AdminEventList";
 import AdminUserManagement from "@/components/superadmincomponents/AdminUserManagement";
 import EventDetailModal from "@/components/superadmincomponents/EventDetailModal";
-import UserAddModal from "@/components/superadmincomponents/UserAddModal";
-import UserDetailModal from "@/components/superadmincomponents/UserDetailModal";
+
 import {
   IonContent,
   IonHeader,
@@ -14,10 +13,11 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import { User } from "@/types/user";
+import { RegisterByAdminDto, AuthService } from "@/api-sdk-backend";
 
 const AdminPage: React.FC = () => {
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const renderActiveComponent = () => {
     switch (activeComponent) {
@@ -28,35 +28,12 @@ const AdminPage: React.FC = () => {
       case "eventList":
         return <AdminEventList events={[]} />;
       case "userManagement":
-        return <AdminUserManagement />;
-      case "eventDetail":
         return (
-          <EventDetailModal
-            isOpen={true}
-            onClose={() => setActiveComponent(null)}
-            event={null}
-            onApprove={function (eventId: string): void {
-              throw new Error("Function not implemented.");
-            }}
-            onReject={function (eventId: string): void {
-              throw new Error("Function not implemented.");
-            }}
+          <AdminUserManagement
+            openAddUserModal={() => setIsAddModalOpen(true)}
           />
         );
-      case "userAdd":
-        return (
-          <UserAddModal
-            isOpen={true}
-            onClose={() => setActiveComponent(null)}
-            onAdd={function (user: {
-              name: string;
-              email: string;
-              role: string;
-            }): void {
-              throw new Error("Function not implemented.");
-            }}
-          />
-        );
+
       default:
         return null;
     }
@@ -92,14 +69,6 @@ const AdminPage: React.FC = () => {
             {
               label: "Détail d'un événement",
               onClick: () => setActiveComponent("eventDetail"),
-            },
-            {
-              label: "Ajouter un utilisateur",
-              onClick: () => setActiveComponent("userAdd"),
-            },
-            {
-              label: "Détail d'un utilisateur",
-              onClick: () => setActiveComponent("userDetail"),
             },
           ]}
         />

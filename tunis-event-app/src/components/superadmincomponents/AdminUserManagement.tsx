@@ -1,88 +1,70 @@
-import React, { useState } from "react";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
+import { useEffect, useState } from "react";
+import { UsersService } from "@/api-sdk-backend/services/UsersService";
 import { Button } from "@/components/ui/button";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Select,
-  SelectTrigger,
   SelectContent,
   SelectItem,
+  SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
+import { UserDto } from "@/api-sdk-backend/models/UserDto";
 import UserDetailModal from "./UserDetailModal";
-import { useToast } from "@/hooks/use-toast";
-import UserAddModal from "./UserAddModal";
 
-const users = [
-  { id: 1, name: "Jean Dupont", email: "jean@email.com", role: "Organisateur" },
-  {
-    id: 2,
-    name: "Sophie Martin",
-    email: "sophie@email.com",
-    role: "Participant",
-  },
-];
+interface Props {
+  openAddUserModal: () => void;
+}
 
-export default function AdminUserManagement() {
-  const [userList, setUserList] = useState(users);
-  const [selectedUser, setSelectedUser] = useState<(typeof users)[0] | null>(
-    null
-  );
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+export default function AdminUserManagement({ openAddUserModal }: Props) {
+  const [usersDto, setUsersDto] = useState<UserDto[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserDto | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>(""); // "" = tous
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { toast } = useToast();
-
-  const handleUserSave = (updatedUser: (typeof users)[0]) => {
-    const updatedList = userList.map((user) =>
-      user.id === updatedUser.id ? updatedUser : user
-    );
-    setUserList(updatedList);
-
-    toast({
-      title: "Utilisateur modifié",
-      description: `${updatedUser.name} a été mis à jour.`,
-    });
-  };
-  const handleAddUser = (user: {
-    name: string;
-    email: string;
-    role: string;
-  }) => {
-    const newUser = {
-      id: Date.now(), // simple ID unique
-      ...user,
-    };
-    setUserList((prev) => [...prev, newUser]);
-    toast({
-      title: "Utilisateur ajouté",
-      description: `${user.name} a été ajouté avec succès.`,
-    });
+  const fetchUsers = async () => {
+    try {
+      const data = await UsersService.usersControllerFindAll();
+      setUsersDto(data);
+    } catch (e) {
+      console.error(e);
+      toast.error("Erreur lors du chargement des utilisateurs");
+    }
   };
 
-  const handleUserDelete = (id: number) => {
-    const updatedList = userList.filter((user) => user.id !== id);
-    setUserList(updatedList);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-    toast({
-      title: "Utilisateur supprimé",
-      description: `L'utilisateur a été supprimé avec succès.`,
-    });
-  };
+  const filteredUsers =
+    selectedRole === "ALL" || selectedRole === ""
+      ? usersDto
+      : usersDto.filter((user) => user.role === selectedRole);
 
   return (
-    <div className="w-full p-4 space-y-4">
-      <h1 className="text-xl font-bold">Gestion des utilisateurs</h1>
+    <div className="space-y-6 p-4">
+      <h2 className="text-xl font-bold">Gestion des utilisateurs</h2>
 
-      <div className="flex justify-end">
-        <Button onClick={() => setIsAddModalOpen(true)}>
-          Ajouter un utilisateur
-        </Button>
+      <div className="flex justify-between items-center">
+        <Select onValueChange={(value) => setSelectedRole(value)}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filtrer par rôle" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">Tous</SelectItem>
+            <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+            <SelectItem value="ORGANISATEUR">Organisateur</SelectItem>
+            <SelectItem value="PARTICIPANT">Participant</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button onClick={openAddUserModal}>Ajouter un utilisateur</Button>
       </div>
 
       <Table>
@@ -93,14 +75,11 @@ export default function AdminUserManagement() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {userList.map((user) => (
+          {filteredUsers.map((user) => (
             <TableRow
               key={user.id}
-              className="cursor-pointer hover:bg-muted"
-              onClick={() => {
-                setSelectedUser(user);
-                setIsModalOpen(true);
-              }}
+              className="cursor-pointer hover:bg-gray-100"
+              onClick={() => setSelectedUser(user)}
             >
               <TableCell>{user.name}</TableCell>
               <TableCell>{user.role}</TableCell>
@@ -109,18 +88,20 @@ export default function AdminUserManagement() {
         </TableBody>
       </Table>
 
-      <UserDetailModal
-        user={selectedUser}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleUserSave}
-        onDelete={handleUserDelete}
-      />
-      <UserAddModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddUser}
-      />
+      {selectedUser && (
+        <UserDetailModal
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+          onUpdate={() => {
+            setSelectedUser(null);
+            fetchUsers();
+          }}
+          onDelete={() => {
+            setSelectedUser(null);
+            fetchUsers();
+          }}
+        />
+      )}
     </div>
   );
 }

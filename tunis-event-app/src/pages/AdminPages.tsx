@@ -15,9 +15,24 @@ import {
   IonToolbar,
 } from "@ionic/react";
 import { User } from "@/types/user";
+import { AuthService, RegisterByAdminDto } from "@/api-sdk-backend";
 
 const AdminPage: React.FC = () => {
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const handleAddUser = async (user: RegisterByAdminDto) => {
+    try {
+      const token = localStorage.getItem("token"); // 🔍 récupère le token du localStorage
+      if (!token) throw new Error("Token manquant"); // 🛑 empêche la requête sans token
+
+      await AuthService.authControllerRegisterByAdmin(user);
+
+      setIsAddModalOpen(false); // ✅ ferme le modal si tout s'est bien passé
+    } catch (e) {
+      console.error("Erreur ajout utilisateur:", e); // ❌ gère proprement l'erreur
+    }
+  };
 
   const renderActiveComponent = () => {
     switch (activeComponent) {
@@ -28,7 +43,11 @@ const AdminPage: React.FC = () => {
       case "eventList":
         return <AdminEventList events={[]} />;
       case "userManagement":
-        return <AdminUserManagement />;
+        return (
+          <AdminUserManagement
+            openAddUserModal={() => setIsAddModalOpen(true)}
+          />
+        );
       case "eventDetail":
         return (
           <EventDetailModal
@@ -43,20 +62,7 @@ const AdminPage: React.FC = () => {
             }}
           />
         );
-      case "userAdd":
-        return (
-          <UserAddModal
-            isOpen={true}
-            onClose={() => setActiveComponent(null)}
-            onAdd={function (user: {
-              name: string;
-              email: string;
-              role: string;
-            }): void {
-              throw new Error("Function not implemented.");
-            }}
-          />
-        );
+
       default:
         return null;
     }
@@ -95,7 +101,7 @@ const AdminPage: React.FC = () => {
             },
             {
               label: "Ajouter un utilisateur",
-              onClick: () => setActiveComponent("userAdd"),
+              onClick: () => setIsAddModalOpen(true),
             },
             {
               label: "Détail d'un utilisateur",
@@ -104,7 +110,14 @@ const AdminPage: React.FC = () => {
           ]}
         />
 
-        <div className="mt-6">{renderActiveComponent()}</div>
+        <div className="mt-6">
+          <UserAddModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            onAdd={handleAddUser}
+          />
+          {renderActiveComponent()}
+        </div>
       </IonContent>
     </IonPage>
   );

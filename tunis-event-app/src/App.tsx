@@ -33,6 +33,7 @@ import "@ionic/react/css/palettes/dark.system.css";
 import "./theme/variables.css";
 import OrganizerPage from "./pages/OrganizerPage";
 import ParticipantPage from "./pages/ParticipantPage";
+import { Toaster } from "sonner";
 
 setupIonicReact();
 
@@ -54,6 +55,7 @@ const App: React.FC = () => {
 
   return (
     <IonApp>
+      <Toaster position="top-right" richColors />
       <AppBackground blurhash="L-Cuh^nhV@jZ.ToyWEoJx@a$kDoL" />
       <IonReactRouter>
         {!user ? (

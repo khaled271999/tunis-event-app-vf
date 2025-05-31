@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { LoginDto } from '../models/LoginDto';
+import type { RegisterByAdminDto } from '../models/RegisterByAdminDto';
 import type { RegisterDto } from '../models/RegisterDto';
 import type { RegisterOrganisateurDto } from '../models/RegisterOrganisateurDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -50,6 +51,21 @@ export class AuthService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/auth/register-organisateur',
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+    /**
+     * @param requestBody
+     * @returns any
+     * @throws ApiError
+     */
+    public static authControllerRegisterByAdmin(
+        requestBody: RegisterByAdminDto,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/auth/register-by-admin',
             body: requestBody,
             mediaType: 'application/json',
         });

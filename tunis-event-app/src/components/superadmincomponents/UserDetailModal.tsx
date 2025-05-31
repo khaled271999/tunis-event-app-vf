@@ -14,41 +14,80 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import React, { useState, useEffect } from "react";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-}
+import { UserDto } from "@/api-sdk-backend/models/UserDto";
+import { UsersService } from "@/api-sdk-backend/services/UsersService";
+import { toast } from "sonner";
 
 interface Props {
-  user: User | null;
-  isOpen: boolean;
+  user: UserDto;
   onClose: () => void;
-  onSave: (user: User) => void;
-  onDelete: (id: number) => void;
+  onUpdate: () => void;
+  onDelete: () => void;
+}
+interface UserDtoWithOrg extends UserDto {
+  organization?: {
+    name?: string;
+    subdomain?: string;
+    description?: string;
+  };
 }
 
 export default function UserDetailModal({
   user,
-  isOpen,
   onClose,
-  onSave,
+  onUpdate,
   onDelete,
 }: Props) {
-  const [formData, setFormData] = useState<User | null>(null);
+  const [formData, setFormData] = useState<UserDtoWithOrg>(user);
 
   useEffect(() => {
-    if (user) {
-      setFormData(user);
-    }
+    setFormData(user);
   }, [user]);
 
-  if (!formData) return null;
+  const handleSave = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return toast.error("Token manquant");
+
+    try {
+      const { name, email, role, organization } = formData;
+
+      const payload: any = { name, email, role };
+
+      if (role === "ORGANISATEUR") {
+        if (!organization?.name)
+          return toast.error("Nom de l'organisation requis");
+
+        payload.organization = {
+          name: organization.name,
+          description: organization.description || "",
+        };
+      }
+
+      await UsersService.usersControllerUpdate(user.id, payload);
+      toast.success("Utilisateur modifié");
+      onUpdate();
+    } catch (error) {
+      console.error(error);
+      toast.error("Échec de la modification");
+    }
+  };
+
+  const handleDelete = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return toast.error("Token manquant");
+
+    try {
+      await UsersService.usersControllerRemove(user.id);
+      toast.success("Utilisateur supprimé");
+      onDelete();
+    } catch (error) {
+      console.error(error);
+      toast.error("Échec de la suppression");
+    }
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifier l'utilisateur</DialogTitle>
@@ -70,40 +109,60 @@ export default function UserDetailModal({
           />
           <Select
             value={formData.role}
-            onValueChange={(value) => setFormData({ ...formData, role: value })}
+            onValueChange={(value) =>
+              setFormData({ ...formData, role: value as UserDto["role"] })
+            }
           >
+            {formData.role === "ORGANISATEUR" && (
+              <>
+                <Input
+                  placeholder="Nom de l'organisation"
+                  value={formData.organization?.name || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      organization: {
+                        ...formData.organization,
+                        name: e.target.value,
+                      },
+                    })
+                  }
+                />
+                <Input
+                  placeholder="Description de l'organisation"
+                  value={formData.organization?.description || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      organization: {
+                        ...formData.organization,
+                        description: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </>
+            )}
+
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Rôle" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Participant">Participant</SelectItem>
-              <SelectItem value="Organisateur">Organisateur</SelectItem>
-              <SelectItem value="SuperAdmin">Super Admin</SelectItem>
+              <SelectItem value="PARTICIPANT">Participant</SelectItem>
+              <SelectItem value="ORGANISATEUR">Organisateur</SelectItem>
+              <SelectItem value="SUPERADMIN">Super Admin</SelectItem>
             </SelectContent>
           </Select>
 
           <div className="flex justify-between gap-2 pt-4">
-            <Button
-              variant="destructive"
-              onClick={() => {
-                onDelete(formData.id);
-                onClose();
-              }}
-            >
+            <Button variant="destructive" onClick={handleDelete}>
               Supprimer
             </Button>
             <div className="flex gap-2 ml-auto">
               <Button variant="outline" onClick={onClose}>
                 Annuler
               </Button>
-              <Button
-                onClick={() => {
-                  onSave(formData);
-                  onClose();
-                }}
-              >
-                Enregistrer
-              </Button>
+              <Button onClick={handleSave}>Enregistrer</Button>
             </div>
           </div>
         </div>
