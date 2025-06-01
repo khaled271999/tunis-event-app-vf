@@ -1,96 +1,94 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star } from "lucide-react";
+import { Star, AlertCircle, Trash2 } from "lucide-react";
+import { CommentsService } from "@/api-sdk-backend";
+import { withAuth } from "@/hooks/withAuth";
+import { toast } from "sonner";
 
 interface Comment {
   id: string;
-  event: string;
-  user: string;
-  text: string;
+  event: { id: string; title: string };
+  user: { id: string; name: string };
+  content: string;
   rating: number;
   reported: boolean;
 }
 
-const mockComments: Comment[] = [
-  {
-    id: "1",
-    event: "Hackathon 2024",
-    user: "Sarra B.",
-    text: "Trop bruyant mais bien organisé",
-    rating: 3,
-    reported: false,
-  },
-  {
-    id: "2",
-    event: "Festival musique",
-    user: "Ali Z.",
-    text: "Public irrespectueux 🤬",
-    rating: 1,
-    reported: true,
-  },
-  {
-    id: "3",
-    event: "Atelier IA",
-    user: "Mehdi T.",
-    text: "Contenu enrichissant !",
-    rating: 5,
-    reported: false,
-  },
-];
-
 const AdminCommentModeration = () => {
-  const [comments, setComments] = useState<Comment[]>(mockComments);
-  const [onlyReported, setOnlyReported] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
 
-  const handleDelete = (id: string) => {
-    setComments(comments.filter((c) => c.id !== id));
+  const fetchComments = async () => {
+    try {
+      const data = await withAuth(() =>
+        CommentsService.commentControllerGetReportedComments()
+      );
+      setComments(data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des commentaires", error);
+      toast.error("Impossible de charger les commentaires");
+    }
   };
 
-  const handleToggleReport = (id: string) => {
-    setComments(
-      comments.map((c) => (c.id === id ? { ...c, reported: !c.reported } : c))
-    );
+  useEffect(() => {
+    fetchComments();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await withAuth(() => CommentsService.commentControllerDeleteComment(id));
+      setComments((prev) => prev.filter((c) => c.id !== id));
+      toast.success("Commentaire supprimé");
+    } catch (error) {
+      console.error("Erreur lors de la suppression", error);
+      toast.error("Échec de la suppression");
+    }
   };
 
-  const filteredComments = onlyReported
-    ? comments.filter((c) => c.reported)
-    : comments;
+  const handleToggleReport = async (id: string, reported: boolean) => {
+    try {
+      if (reported) {
+        await withAuth(() =>
+          CommentsService.commentControllerUnreportComment(id)
+        );
+      } else {
+        await withAuth(() =>
+          CommentsService.commentControllerReportComment(id)
+        );
+      }
+      setComments((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, reported: !reported } : c))
+      );
+    } catch (error) {
+      console.error("Erreur lors du changement de signalement", error);
+      toast.error("Échec du signalement");
+    }
+  };
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-xl font-bold">Modération des Commentaires</h1>
+      <h1 className="text-xl font-bold">
+        Modération des commentaires signalés
+      </h1>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="filterReported"
-          checked={onlyReported}
-          onChange={() => setOnlyReported(!onlyReported)}
-          className="accent-red-600"
-        />
-        <label htmlFor="filterReported" className="text-sm">
-          Afficher uniquement les signalés
-        </label>
-      </div>
-
-      {/* Liste en cartes uniquement (mobile) */}
       <div className="space-y-3">
-        {filteredComments.length === 0 ? (
+        {comments.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Aucun commentaire à afficher.
           </p>
         ) : (
-          filteredComments.map((comment) => (
+          comments.map((comment) => (
             <Card key={comment.id} className="p-4 space-y-2">
               <div className="flex justify-between items-center">
-                <h2 className="text-sm font-medium">{comment.event}</h2>
+                <h2 className="text-sm font-medium">{comment.event.title}</h2>
                 {comment.reported && (
                   <Badge variant="destructive">Signalé</Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">{comment.user}</p>
+              <p className="text-sm text-muted-foreground">
+                {comment.user.name}
+              </p>
               <div className="flex gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star
@@ -103,12 +101,14 @@ const AdminCommentModeration = () => {
                   />
                 ))}
               </div>
-              <p className="text-sm">{comment.text}</p>
+              <p className="text-sm">{comment.content}</p>
               <div className="flex gap-2 pt-2 justify-end">
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleToggleReport(comment.id)}
+                  onClick={() =>
+                    handleToggleReport(comment.id, comment.reported)
+                  }
                 >
                   {comment.reported ? "Annuler" : "Signaler"}
                 </Button>

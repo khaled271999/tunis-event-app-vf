@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,10 +14,19 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { UserDto } from "@/api-sdk-backend/models/UserDto";
 import { UsersService } from "@/api-sdk-backend/services/UsersService";
-import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 interface Props {
   user: UserDto;
@@ -24,6 +34,7 @@ interface Props {
   onUpdate: () => void;
   onDelete: () => void;
 }
+
 interface UserDtoWithOrg extends UserDto {
   organization?: {
     name?: string;
@@ -39,6 +50,7 @@ export default function UserDetailModal({
   onDelete,
 }: Props) {
   const [formData, setFormData] = useState<UserDtoWithOrg>(user);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     setFormData(user);
@@ -87,32 +99,45 @@ export default function UserDetailModal({
   };
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Modifier l'utilisateur</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <Input
-            type="text"
-            placeholder="Nom"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-          <Input
-            type="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-          />
-          <Select
-            value={formData.role}
-            onValueChange={(value) =>
-              setFormData({ ...formData, role: value as UserDto["role"] })
-            }
-          >
+    <>
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier l'utilisateur</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              type="text"
+              placeholder="Nom"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
+            <Input
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
+            <Select
+              value={formData.role}
+              onValueChange={(value) =>
+                setFormData({ ...formData, role: value as UserDto["role"] })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Rôle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PARTICIPANT">Participant</SelectItem>
+                <SelectItem value="ORGANISATEUR">Organisateur</SelectItem>
+                <SelectItem value="SUPERADMIN">Super Admin</SelectItem>
+              </SelectContent>
+            </Select>
+
             {formData.role === "ORGANISATEUR" && (
               <>
                 <Input
@@ -144,29 +169,46 @@ export default function UserDetailModal({
               </>
             )}
 
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Rôle" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="PARTICIPANT">Participant</SelectItem>
-              <SelectItem value="ORGANISATEUR">Organisateur</SelectItem>
-              <SelectItem value="SUPERADMIN">Super Admin</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <div className="flex justify-between gap-2 pt-4">
-            <Button variant="destructive" onClick={handleDelete}>
-              Supprimer
-            </Button>
-            <div className="flex gap-2 ml-auto">
-              <Button variant="outline" onClick={onClose}>
-                Annuler
+            <div className="flex justify-between gap-2 pt-4">
+              <Button
+                variant="destructive"
+                onClick={() => setShowConfirmDialog(true)}
+              >
+                Supprimer
               </Button>
-              <Button onClick={handleSave}>Enregistrer</Button>
+              <div className="flex gap-2 ml-auto">
+                <Button variant="outline" onClick={onClose}>
+                  Annuler
+                </Button>
+                <Button onClick={handleSave}>Enregistrer</Button>
+              </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action
+              est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                handleDelete();
+                setShowConfirmDialog(false);
+              }}
+            >
+              Confirmer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

@@ -2,139 +2,126 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CreateEventDto } from '../models/CreateEventDto';
-import type { UpdateEventDto } from '../models/UpdateEventDto';
+import type { CreateCommentDto } from '../models/CreateCommentDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
-export class EventsService {
+export class CommentsService {
     /**
+     * Créer un commentaire
+     * @param eventId
      * @param requestBody
      * @returns any
      * @throws ApiError
      */
-    public static eventsControllerCreateEvent(
-        requestBody: CreateEventDto,
+    public static commentControllerCreateComment(
+        eventId: string,
+        requestBody: CreateCommentDto,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/events',
-            body: requestBody,
-            mediaType: 'application/json',
-        });
-    }
-    /**
-     * @returns any
-     * @throws ApiError
-     */
-    public static eventsControllerGetAllEvents(): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/events',
-        });
-    }
-    /**
-     * @param id
-     * @returns any
-     * @throws ApiError
-     */
-    public static eventsControllerDeleteEvent(
-        id: string,
-    ): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'DELETE',
-            url: '/events/{id}',
+            url: '/comments/{eventId}',
             path: {
-                'id': id,
-            },
-        });
-    }
-    /**
-     * @param id
-     * @param requestBody
-     * @returns any
-     * @throws ApiError
-     */
-    public static eventsControllerUpdateEvent(
-        id: string,
-        requestBody: UpdateEventDto,
-    ): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/events/{id}',
-            path: {
-                'id': id,
+                'eventId': eventId,
             },
             body: requestBody,
             mediaType: 'application/json',
         });
     }
     /**
-     * @param id
+     * Récupérer tous les commentaires d’un événement
+     * @param eventId
      * @returns any
      * @throws ApiError
      */
-    public static eventsControllerApproveEvent(
-        id: string,
+    public static commentControllerGetAllCommentsForEvent(
+        eventId: string,
     ): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/events/{id}/approve',
-            path: {
-                'id': id,
-            },
-        });
-    }
-    /**
-     * @param id
-     * @returns any
-     * @throws ApiError
-     */
-    public static eventsControllerRejectEvent(
-        id: string,
-    ): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/events/{id}/reject',
-            path: {
-                'id': id,
-            },
-        });
-    }
-    /**
-     * @returns any
-     * @throws ApiError
-     */
-    public static eventsControllerGetMyEvents(): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/events/me',
+            url: '/comments/event/{eventId}',
+            path: {
+                'eventId': eventId,
+            },
         });
     }
     /**
+     * Signaler un commentaire
      * @param id
      * @returns any
      * @throws ApiError
      */
-    public static eventsControllerDeleteMyEvent(
+    public static commentControllerReportComment(
+        id: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/comments/{id}/report',
+            path: {
+                'id': id,
+            },
+        });
+    }
+    /**
+     * Annuler un signalement (SuperAdmin)
+     * @param id
+     * @returns any
+     * @throws ApiError
+     */
+    public static commentControllerUnreportComment(
+        id: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/comments/{id}/unreport',
+            path: {
+                'id': id,
+            },
+        });
+    }
+    /**
+     * Lister tous les commentaires signalés (SuperAdmin)
+     * @returns any
+     * @throws ApiError
+     */
+    public static commentControllerGetReportedComments(): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/comments/reported',
+        });
+    }
+    /**
+     * Supprimer un commentaire (SuperAdmin)
+     * @param id
+     * @returns any
+     * @throws ApiError
+     */
+    public static commentControllerDeleteComment(
         id: string,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/events/{id}/organisateur',
+            url: '/comments/{id}',
             path: {
                 'id': id,
             },
         });
     }
     /**
+     * Supprimer son propre commentaire
+     * @param id
      * @returns any
      * @throws ApiError
      */
-    public static eventsControllerGetApprovedLocalEvents(): CancelablePromise<any> {
+    public static commentControllerDeleteOwnComment(
+        id: string,
+    ): CancelablePromise<any> {
         return __request(OpenAPI, {
-            method: 'GET',
-            url: '/events/approved',
+            method: 'DELETE',
+            url: '/comments/own/{id}',
+            path: {
+                'id': id,
+            },
         });
     }
 }

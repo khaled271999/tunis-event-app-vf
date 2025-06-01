@@ -14,13 +14,15 @@ import OrganizerDashboard from "@/components/OrganizerComponents/OrganizerDashbo
 import OrganizerEvents from "@/components/OrganizerComponents/OrganizerEvents";
 
 const OrganizerPages: React.FC = () => {
-  const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  const [activeComponent, setActiveComponent] = useState<string | null>(
+    "Dashboard"
+  );
 
   const renderActiveComponent = () => {
     switch (activeComponent) {
       case "createventform":
         return <CreateEventForm />;
-      case "organizerdetailmodal":
+      case "Dashboard":
         return <OrganizerDashboard />;
       case "organizerevents":
         return <OrganizerEvents />;
@@ -42,13 +44,14 @@ const OrganizerPages: React.FC = () => {
         <SettingsSection
           items={[
             {
+              label: "Dashboard",
+              onClick: () => setActiveComponent("Dashboard"),
+            },
+            {
               label: "creer un evenment",
               onClick: () => setActiveComponent("createventform"),
             },
-            {
-              label: "detail de lorganisateur",
-              onClick: () => setActiveComponent("organizerdetailmodal"),
-            },
+
             {
               label: "mes événements",
               onClick: () => setActiveComponent("organizerevents"),

@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { UpdateProfileDto } from '../models/UpdateProfileDto';
 import type { UpdateUserDto } from '../models/UpdateUserDto';
 import type { UserDto } from '../models/UserDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -52,6 +53,31 @@ export class UsersService {
             path: {
                 'id': id,
             },
+        });
+    }
+    /**
+     * @param requestBody
+     * @returns UserDto
+     * @throws ApiError
+     */
+    public static usersControllerUpdateProfile(
+        requestBody: UpdateProfileDto,
+    ): CancelablePromise<UserDto> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/users/profile',
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+    /**
+     * @returns UserDto
+     * @throws ApiError
+     */
+    public static usersControllerGetCurrentUser(): CancelablePromise<UserDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/users/me',
         });
     }
 }

@@ -103,10 +103,11 @@ model Participation {
 model Comment {
   id        String   @id @default(uuid())
   content   String
-  rating    Int
+  rating    Int      @default(0)
   userId    String
   eventId   String
   user      User     @relation(fields: [userId], references: [id])
   event     Event    @relation(fields: [eventId], references: [id])
+  reported  Boolean  @default(false)
   createdAt DateTime @default(now())
 }

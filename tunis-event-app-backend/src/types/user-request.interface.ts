@@ -1,5 +1,5 @@
-export interface JwtPayload {
-  sub: string;
+export interface AuthenticatedRequestUser {
+  userId: string;
   email: string;
   role: 'SUPERADMIN' | 'ORGANISATEUR' | 'PARTICIPANT';
   organizationId: string;

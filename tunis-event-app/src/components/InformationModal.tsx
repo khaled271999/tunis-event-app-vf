@@ -4,18 +4,30 @@ import EventImage from "./InformationModalComponents/EventImage";
 import EventDate from "./InformationModalComponents/EventDate";
 import EventLocation from "./InformationModalComponents/EventLocation";
 import EventTickets from "./InformationModalComponents/EventTickets";
-import SecretCodeUnlock from "./InformationModalComponents/SecretCodeUnlock";
 import { Card } from "./ui/card";
 import MapComponent from "./MapComponent";
-
 import { Badge } from "./ui/badge";
-import { informationCircleOutline } from "ionicons/icons";
+import { informationCircleOutline, trashBin } from "ionicons/icons";
 import EventOrganizer from "./InformationModalComponents/EventOrganizer";
 import { Blurhash } from "react-blurhash";
-
 import { extractFormattedText } from "@/lib/extractFormattedText";
 import BackIconButton from "./ui/BackIconButton";
 import EventCommentSection from "./InformationModalComponents/EventCommentSection";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { EventsService } from "@/api-sdk-backend";
+import { withAuth } from "@/hooks/withAuth";
+import { useAuth } from "@/hooks/useAuth";
+
 interface MinimalEvent {
   id: string;
   name: string;
@@ -60,27 +72,42 @@ const InformationModal: React.FC<InformationModalProps> = ({
   onClose,
   event,
 }) => {
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const [showOrganizer, setShowOrganizer] = useState(false);
+  const { user } = useAuth();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!event) return null;
 
-  const tickets =
-    event.badges.prices.length > 0
-      ? event.badges.prices.map((price, index) => ({
-          name: `Ticket ${index + 1}`,
-          price: price,
-          soldOut: event.badges.completelySold || false,
-        }))
-      : [];
+  const tickets = Array.isArray(event.badges?.prices)
+    ? event.badges.prices.map((price, index) => ({
+        name: `Ticket ${index + 1}`,
+        price,
+        soldOut: event.badges.completelySold || false,
+      }))
+    : [];
+
+  const handleDelete = async () => {
+    if (event?.id?.startsWith("public")) {
+      toast.error("Événement non autorisé à la suppression (source publique)");
+      return;
+    }
+
+    try {
+      await withAuth(() => EventsService.eventsControllerDeleteEvent(event.id));
+      toast.success("Événement supprimé avec succès");
+      onClose();
+    } catch (error) {
+      console.error("Erreur suppression:", error);
+      toast.error("Échec de la suppression de l'événement");
+    }
+  };
 
   return (
     <IonModal
       isOpen={isOpen}
       onDidDismiss={onClose}
-      className="flex items-center justify-center "
+      className="flex items-center justify-center"
     >
-      {/* 🌟 Ajout du Blurhash en arrière-plan */}
       <div className="absolute inset-0 w-full h-full overflow-hidden rounded-lg">
         <Blurhash
           hash={event.image.blurhash || "L-Cuh^nhV@jZ.ToyWEoJx@a$kDoL"}
@@ -92,18 +119,19 @@ const InformationModal: React.FC<InformationModalProps> = ({
           className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
-      <IonContent className="p-6 space-y-6 w-full max-w-2xl mx-auto relative bg-opacity-80 backdrop-blur-lg ">
+
+      <IonContent className="p-6 space-y-6 w-full max-w-2xl mx-auto relative bg-opacity-80 backdrop-blur-lg">
         <div className="w-full flex justify-center mt-3">
-          <BackIconButton onClick={onClose} />{" "}
+          <BackIconButton onClick={onClose} />
           <EventImage
             imageUrl={`https://api.tunis.events/${event.image.path}`}
             altText={event.name}
             name={event.name}
           />
         </div>
-        {/* ✅ Badge qui disparaît quand la carte s'affiche */}
+
         <div className="w-full max-w-md mx-auto">
-          {!showOrganizer && ( // ✅ Cache le badge si la carte est affichée
+          {!showOrganizer && (
             <Badge
               variant="secondary"
               className="flex items-center cursor-pointer px-3 py-1 text-sm"
@@ -115,7 +143,7 @@ const InformationModal: React.FC<InformationModalProps> = ({
                     src={`https://api.tunis.events/storage/${event.organization.image.filename}`}
                     alt={event.organization.name}
                     className="w-full h-full object-cover"
-                    onError={(e) => (e.currentTarget.style.display = "none")} // Cache si l'image ne charge pas
+                    onError={(e) => (e.currentTarget.style.display = "none")}
                   />
                 ) : (
                   <IonIcon
@@ -128,7 +156,6 @@ const InformationModal: React.FC<InformationModalProps> = ({
             </Badge>
           )}
 
-          {/* ✅ Affichage conditionnel de `EventOrganizer` */}
           {showOrganizer && (
             <div className="mt-3 transition-all duration-300">
               <EventOrganizer organization={event.organization} />
@@ -151,20 +178,19 @@ const InformationModal: React.FC<InformationModalProps> = ({
           </div>
         </div>
 
-        {/* ✅ Toujours afficher le bouton de réservation */}
         <div className="w-full max-w-md mx-auto pl-1 pr-1">
           <EventTickets eventId={event.id} />
         </div>
 
-        {/* ✅ Affichage de la description formatée */}
         {event.description && (
-          <div className="w-full max-w-md mx-auto bg-muted p-4 b-3 rounded-2xl  shadow-lg">
+          <div className="w-full max-w-md mx-auto bg-muted p-4 b-3 rounded-2xl shadow-lg">
             {extractFormattedText(
               event.description,
               "Aucune information disponible sur cet événement."
             )}
           </div>
         )}
+
         <div className="b-3 w-full max-w-md mx-auto pb-3 pl-1 pr-1">
           <Card className="bg-card border border-gray-700 shadow-lg p-6 rounded-2xl space-y-4 w-full max-w-lg mx-auto">
             <EventLocation {...event.venue} />
@@ -173,16 +199,40 @@ const InformationModal: React.FC<InformationModalProps> = ({
                 ...event,
                 venue: {
                   ...event.venue,
-                  rating: event.venue.rating ?? 0, // ✅ Définit une valeur par défaut
-                  address_components: event.venue.address_components ?? [], // ✅ Évite l'erreur
+                  rating: event.venue.rating ?? 0,
+                  address_components: event.venue.address_components ?? [],
                 },
               }}
             />
           </Card>
         </div>
         <div className="b-3 w-full max-w-md mx-auto pb-3 pl-1 pr-1">
-          <EventCommentSection />
+          <EventCommentSection eventId={event.id} />
         </div>
+        {user?.role === "SUPERADMIN" && (
+          <div className="b-3 w-full max-w-md mx-auto pb-3 pl-1 pr-1 flex justify-center">
+            <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+              <AlertDialogTrigger asChild>
+                <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2">
+                  <IonIcon icon={trashBin} /> Supprimer cet événement
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Confirmer la suppression de l'événement ?
+                  </AlertDialogTitle>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>
+                    Confirmer
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
       </IonContent>
     </IonModal>
   );

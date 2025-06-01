@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -8,42 +8,48 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin } from "lucide-react";
 import { Event } from "@/types/event";
 import EventDetailModal from "./EventDetailModal";
+import { EventsService } from "@/api-sdk-backend";
+import { withAuth } from "@/hooks/withAuth";
+import { toast } from "sonner";
 
 interface AdminEventListProps {
   events: Event[];
+  onUpdate: (events: Event[]) => void;
 }
 
-const formatShortDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const day = date.getUTCDate().toString().padStart(2, "0");
-  const month = date.toLocaleString("fr-FR", { month: "short" });
-  return `${day} ${month}`.toUpperCase();
-};
-
-const AdminEventList: React.FC<AdminEventListProps> = ({ events }) => {
-  React.useEffect(() => {
-    setEventList(events);
-  }, [events]);
-
+const AdminEventList: React.FC<AdminEventListProps> = ({
+  events,
+  onUpdate,
+}) => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [eventList, setEventList] = useState(events); // local copy for updates
 
-  const handleApprove = (id: string) => {
-    const updated = eventList.map((e) =>
-      e.id === id ? { ...e, status: "approved" } : e
-    ) as Event[]; // ✅ Ajout ici
-    setEventList(updated);
+  const handleApprove = async (id: string) => {
+    try {
+      await withAuth(() => EventsService.eventsControllerApproveEvent(id));
+      const updated = events.map((e) =>
+        e.id === id ? { ...e, status: "approved" as "approved" } : e
+      );
+      onUpdate(updated);
+      toast.success("✅ Événement approuvé");
+    } catch (err) {
+      toast.error("❌ Erreur approbation événement");
+    }
   };
 
-  const handleReject = (id: string) => {
-    const updated = eventList.map((e) =>
-      e.id === id ? { ...e, status: "rejected" } : e
-    ) as Event[]; // ✅ Ajout ici
-    setEventList(updated);
+  const handleReject = async (id: string) => {
+    try {
+      await withAuth(() => EventsService.eventsControllerRejectEvent(id));
+      const updated = events.map((e) =>
+        e.id === id ? { ...e, status: "rejected" as "rejected" } : e
+      );
+      onUpdate(updated);
+      toast.success("⛔ Événement rejeté");
+    } catch (err) {
+      toast.error("❌ Erreur rejet événement");
+    }
   };
 
   return (
@@ -53,12 +59,11 @@ const AdminEventList: React.FC<AdminEventListProps> = ({ events }) => {
         <TableHeader>
           <TableRow>
             <TableCell>Titre</TableCell>
-
             <TableCell>Statut</TableCell>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {eventList.map((event) => (
+          {events.map((event) => (
             <TableRow
               key={event.id}
               className="cursor-pointer hover:bg-muted"
@@ -89,8 +94,8 @@ const AdminEventList: React.FC<AdminEventListProps> = ({ events }) => {
         event={selectedEvent}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onApprove={handleApprove}
-        onReject={handleReject}
+        onApprove={(id) => handleApprove(id)}
+        onReject={(id) => handleReject(id)}
       />
     </div>
   );

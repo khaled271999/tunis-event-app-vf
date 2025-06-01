@@ -7,6 +7,8 @@ import { UsersModule } from './modules/users/users.module';
 import { OrganizationModule } from './modules/organization/organization.module';
 import { EventsModule } from './modules/events/events.module';
 import { SuperAdminModule } from './modules/superadmin/superadmin.module';
+import { ParticipantModule } from './modules/participant/participant.module';
+import { CommentModule } from './modules/comment/comment.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { SuperAdminModule } from './modules/superadmin/superadmin.module';
     EventsModule,
     SuperAdminModule,
     UsersModule,
+    ParticipantModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

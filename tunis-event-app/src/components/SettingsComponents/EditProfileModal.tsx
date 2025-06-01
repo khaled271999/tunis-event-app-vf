@@ -1,8 +1,9 @@
+import React, { useEffect, useState } from "react";
 import { IonModal, IonContent } from "@ionic/react";
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
   SelectTrigger,
@@ -11,8 +12,11 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import BackIconButton from "@/components/ui/BackIconButton";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import AppBackground from "@/theme/AppBackground";
+import { useAuth } from "@/hooks/useAuth";
+import { withAuth } from "@/hooks/withAuth";
+import { toast } from "sonner";
+import { UsersService } from "@/api-sdk-backend";
 
 interface Props {
   isOpen: boolean;
@@ -20,20 +24,63 @@ interface Props {
 }
 
 const EditProfileModal: React.FC<Props> = ({ isOpen, onClose }) => {
-  const [profile, setProfile] = useState({
-    name: "Khaled",
-    dob: "1999-06-27",
-    email: "khammassi59@gmail.com",
-    address: "bardo , Tunis",
-    gender: "Male",
-  });
+  const { user } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const data = await withAuth(() =>
+          UsersService.usersControllerGetCurrentUser()
+        );
+        setName(data.name);
+        setEmail(data.email);
+      } catch (error) {
+        toast.error("Erreur lors du chargement du profil.");
+      }
+    };
+
+    if (isOpen) fetchUserProfile();
+  }, [isOpen]);
+
+  const handleSave = async () => {
+    if (!name || !email) {
+      toast.warning("Le nom et l'email sont requis.");
+      return;
+    }
+
+    if (newPassword && newPassword !== confirmPassword) {
+      toast.warning("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    try {
+      await withAuth(() =>
+        UsersService.usersControllerUpdateProfile({
+          name,
+          email,
+          oldPassword: oldPassword || undefined,
+          newPassword: newPassword || undefined,
+        })
+      );
+      toast.success("Profil mis à jour !");
+      onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error("Erreur lors de la mise à jour du profil.");
+    }
+  };
 
   return (
     <IonModal isOpen={isOpen} onDidDismiss={onClose}>
-      <AppBackground blurhash="L-Cuh^nhV@jZ.ToyWEoJx@a$kDoL" />{" "}
+      <AppBackground blurhash="L-Cuh^nhV@jZ.ToyWEoJx@a$kDoL" />
       <IonContent className="bg-white/70 backdrop-blur-lg p-6 min-h-full">
         <div className="max-w-md mx-auto space-y-6 px-4">
-          {/* Header avec bouton retour */}
+          {/* Header */}
           <div className="flex justify-between items-centre mt-4">
             <BackIconButton onClick={onClose} />
             <h2 className="text-lg font-semibold m-2 text-center flex-1 ml-8 ">
@@ -56,67 +103,48 @@ const EditProfileModal: React.FC<Props> = ({ isOpen, onClose }) => {
           {/* Form */}
           <div className="space-y-4 pl-1 pr-1">
             <div className="space-y-1">
-              <Label htmlFor="name">Name</Label>
+              <Label>Nom</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Email</Label>
               <Input
-                id="name"
-                value={profile.name}
-                onChange={(e) =>
-                  setProfile({ ...profile, name: e.target.value })
-                }
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="dob">Date of Birth</Label>
+              <Label>Mot de passe actuel</Label>
               <Input
-                id="dob"
-                type="date"
-                value={profile.dob}
-                onChange={(e) =>
-                  setProfile({ ...profile, dob: e.target.value })
-                }
+                type="password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
+              <Label>Nouveau mot de passe</Label>
               <Input
-                id="email"
-                value={profile.email}
-                onChange={(e) =>
-                  setProfile({ ...profile, email: e.target.value })
-                }
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="address">Home Address</Label>
+              <Label>Confirmer le mot de passe</Label>
               <Input
-                id="address"
-                value={profile.address}
-                onChange={(e) =>
-                  setProfile({ ...profile, address: e.target.value })
-                }
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
-            </div>
-            <div className="space-y-1">
-              <Label>Gender</Label>
-              <Select
-                value={profile.gender}
-                onValueChange={(val) => setProfile({ ...profile, gender: val })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 
-          {/* Bouton Sauvegarder */}
-          <Button className="w-full rounded-full mt-6 pl-1 pr-1">
-            Save Changes
+          <Button
+            className="w-full rounded-full mt-6 pl-1 pr-1"
+            onClick={handleSave}
+          >
+            Enregistrer les modifications
           </Button>
         </div>
       </IonContent>

@@ -10,9 +10,9 @@ export type UserDto = {
 };
 export namespace UserDto {
     export enum role {
-        PARTICIPANT = 'PARTICIPANT',
-        ORGANISATEUR = 'ORGANISATEUR',
         SUPERADMIN = 'SUPERADMIN',
+        ORGANISATEUR = 'ORGANISATEUR',
+        PARTICIPANT = 'PARTICIPANT',
     }
 }
 

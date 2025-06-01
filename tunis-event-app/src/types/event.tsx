@@ -86,6 +86,11 @@ export interface Event {
     updatedAt: string;
     deletedAt: string | null;
   }>;
-  //a changer ...
   status?: "pending" | "approved" | "rejected";
+}
+export interface SimpleEvent {
+  id: string;
+  title: string;
+  date: string;
+  status: "approved" | "pending" | "rejected" | "canceled";
 }

@@ -6,12 +6,6 @@ import { RegisterDto } from './dto/register.dto';
 import { PrismaService } from '../../prisma.service';
 import { ConfigService } from '@nestjs/config';
 
-interface JwtPayload {
-  sub: string;
-  email: string;
-  role: string;
-}
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -38,20 +32,29 @@ export class AuthService {
   async login(dto: LoginDto): Promise<{ access_token: string }> {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      include: { organization: true }, // ✅ Récupérer l'organisation liée
     });
 
     if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Identifiants invalides');
     }
 
-    const payload: JwtPayload = {
+    const payload: {
+      sub: string;
+      email: string;
+      role: string;
+      organizationId?: string;
+    } = {
       sub: user.id,
       email: user.email,
       role: user.role,
     };
 
-    const token: string = this.jwt.sign(payload);
+    if (user.organization) {
+      payload.organizationId = user.organization.id;
+    }
 
+    const token = this.jwt.sign(payload);
     return { access_token: token };
   }
 }

@@ -40,26 +40,10 @@ const AdminPage: React.FC = () => {
         return <AdminCommentModeration />;
       case "eventManagement":
         return <AdminEvent />;
-      case "eventList":
-        return <AdminEventList events={[]} />;
       case "userManagement":
         return (
           <AdminUserManagement
             openAddUserModal={() => setIsAddModalOpen(true)}
-          />
-        );
-      case "eventDetail":
-        return (
-          <EventDetailModal
-            isOpen={true}
-            onClose={() => setActiveComponent(null)}
-            event={null}
-            onApprove={function (eventId: string): void {
-              throw new Error("Function not implemented.");
-            }}
-            onReject={function (eventId: string): void {
-              throw new Error("Function not implemented.");
-            }}
           />
         );
 
@@ -91,21 +75,10 @@ const AdminPage: React.FC = () => {
               label: "Gestion des événements",
               onClick: () => setActiveComponent("eventManagement"),
             },
-            {
-              label: "Liste des événements",
-              onClick: () => setActiveComponent("eventList"),
-            },
-            {
-              label: "Détail d'un événement",
-              onClick: () => setActiveComponent("eventDetail"),
-            },
+
             {
               label: "Ajouter un utilisateur",
               onClick: () => setIsAddModalOpen(true),
-            },
-            {
-              label: "Détail d'un utilisateur",
-              onClick: () => setActiveComponent("userDetail"),
             },
           ]}
         />

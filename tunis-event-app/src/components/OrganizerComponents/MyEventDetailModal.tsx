@@ -8,9 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import React, { useEffect, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
-// Définir un type simple pour l'événement (local, pas le type global Event complet)
-interface SimpleEvent {
+export interface SimpleEvent {
   id: string;
   title: string;
   date: string;
@@ -70,15 +80,31 @@ const MyEventDetailModal = ({
         </div>
 
         <div className="flex justify-between pt-4">
-          <Button
-            variant="destructive"
-            onClick={() => {
-              onDelete(formData.id);
-              onClose();
-            }}
-          >
-            Supprimer
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Supprimer</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Confirmer la suppression de l’événement ?
+                </AlertDialogTitle>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    onDelete(formData.id);
+                    toast.success("Événement supprimé avec succès");
+                    onClose();
+                  }}
+                >
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose}>
               Annuler
@@ -86,6 +112,7 @@ const MyEventDetailModal = ({
             <Button
               onClick={() => {
                 onSave(formData);
+                toast.success("Événement mis à jour avec succès");
                 onClose();
               }}
             >

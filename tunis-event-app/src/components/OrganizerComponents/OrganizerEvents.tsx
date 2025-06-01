@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -6,61 +6,71 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useIonRouter } from "@ionic/react";
-import EventDetailModal from "./MyEventDetailModal";
+import MyEventDetailModal, { SimpleEvent } from "./MyEventDetailModal";
+import { EventsService } from "@/api-sdk-backend";
+import { withAuth } from "@/hooks/withAuth";
+import { toast } from "sonner";
 
 interface Event {
   id: string;
-  title: string;
+  name: string;
   status: "approved" | "pending" | "rejected" | "canceled";
-  date: string;
+  startDate: string;
 }
 
+const adaptToSimpleEvent = (event: Event): SimpleEvent => ({
+  id: event.id,
+  title: event.name,
+  date: event.startDate,
+  status: event.status,
+});
+
+const adaptToFullEvent = (simple: SimpleEvent): Event => ({
+  id: simple.id,
+  name: simple.title,
+  startDate: simple.date,
+  status: simple.status,
+});
+
 const OrganizerEvents = () => {
-  const router = useIonRouter();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]);
 
-  const handleSave = (updated: Event) => {
-    const updatedEvents = events.map((e) =>
-      e.id === updated.id ? updated : e
-    );
-    setEvents(updatedEvents);
+  useEffect(() => {
+    withAuth(() => EventsService.eventsControllerGetMyEvents())
+      .then((data: Event[]) => setEvents(data))
+      .catch((err: any) =>
+        toast.error("Erreur lors du chargement des événements")
+      );
+  }, []);
+
+  const handleSave = async (updated: SimpleEvent) => {
+    const newEvent = adaptToFullEvent(updated);
+    try {
+      await withAuth(() =>
+        EventsService.eventsControllerUpdateEvent(newEvent.id, newEvent)
+      );
+      setEvents((prev) =>
+        prev.map((e) => (e.id === newEvent.id ? newEvent : e))
+      );
+      toast.success("Événement mis à jour avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour :", error);
+      toast.error("Échec de la mise à jour");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    const filtered = events.filter((e) => e.id !== id);
-    setEvents(filtered);
-  };
-
-  // 🔁 Mock des événements créés par l'utilisateur
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: "1",
-      title: "Hackathon 2024",
-      status: "approved",
-      date: "2024-06-01",
-    },
-    { id: "2", title: "Atelier UI/UX", status: "pending", date: "2024-06-10" },
-    {
-      id: "3",
-      title: "Conférence Web3",
-      status: "rejected",
-      date: "2024-06-20",
-    },
-  ]);
-
-  const handleCancel = (id: string) => {
-    const updated = events.map((e) =>
-      e.id === id ? { ...e, status: "canceled" as Event["status"] } : e
-    );
-    setEvents(updated);
-  };
-
-  const handleEdit = (id: string) => {
-    router.push(`/organizer/events/edit/${id}`, "forward");
+  const handleDelete = async (id: string) => {
+    try {
+      await withAuth(() => EventsService.eventsControllerDeleteMyEvent(id));
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      toast.success("Événement supprimé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la suppression :", error);
+      toast.error("Échec de la suppression");
+    }
   };
 
   return (
@@ -85,8 +95,10 @@ const OrganizerEvents = () => {
                 setIsModalOpen(true);
               }}
             >
-              <TableCell className="font-medium">{event.title}</TableCell>
-              <TableCell>{event.date}</TableCell>
+              <TableCell className="font-medium">{event.name}</TableCell>
+              <TableCell>
+                {new Date(event.startDate).toLocaleDateString()}
+              </TableCell>
               <TableCell>
                 <Badge
                   variant={
@@ -106,8 +118,9 @@ const OrganizerEvents = () => {
           ))}
         </TableBody>
       </Table>
-      <EventDetailModal
-        event={selectedEvent}
+
+      <MyEventDetailModal
+        event={selectedEvent ? adaptToSimpleEvent(selectedEvent) : null}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}

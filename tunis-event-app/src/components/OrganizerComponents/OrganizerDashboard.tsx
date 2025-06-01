@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,18 +9,26 @@ import {
 } from "@/components/ui/dialog";
 import { useIonRouter } from "@ionic/react";
 
+import { EventsService } from "@/api-sdk-backend";
+import { withAuth } from "@/hooks/withAuth";
+
 const OrganizerDashboard = () => {
   const navigate = useIonRouter();
 
   // 🔁 Mock des événements
-  const events = [
-    { id: "1", name: "Salon des métiers", status: "approved" },
-    { id: "2", name: "Atelier UX", status: "pending" },
-    { id: "3", name: "Conférence IA", status: "rejected" },
-    { id: "4", name: "Expo Tech", status: "approved" },
-    { id: "5", name: "Hackathon Étudiant", status: "pending" },
-    { id: "6", name: "Réseautage Startup", status: "approved" },
-  ];
+  const [events, setEvents] = useState<
+    { id: string; name: string; status: string }[]
+  >([]);
+
+  useEffect(() => {
+    withAuth(() => EventsService.eventsControllerGetMyEvents())
+      .then((data) => {
+        setEvents(data); // tu peux adapter si les noms de champs diffèrent
+      })
+      .catch((err) =>
+        console.error("Erreur lors du chargement des événements :", err)
+      );
+  }, []);
 
   // Calculs dynamiques
   const approved = events.filter((e) => e.status === "approved").length;
@@ -77,23 +85,6 @@ const OrganizerDashboard = () => {
             <p className="text-2xl font-semibold text-red-600">{rejected}</p>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Button
-          className="w-full sm:w-auto"
-          onClick={() => navigate.push("/organizer/events/create")}
-        >
-          ➕ Créer un événement
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          onClick={() => navigate.push("/organizer/events")}
-        >
-          👁️ Voir mes événements
-        </Button>
       </div>
 
       {/* Modale filtrée */}
