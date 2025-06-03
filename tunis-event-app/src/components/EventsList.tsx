@@ -15,15 +15,18 @@ interface EventsListProps {
 }
 
 const EventsList: React.FC<EventsListProps> = ({ className }) => {
+  console.log("📦 Composant EventsList monté");
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloading, setReloading] = useState(false);
 
   const fetchEvents = useCallback(async () => {
+    console.log("🔁 fetchEvents déclenché");
     try {
       setLoading(true);
       const events = await fetchCombinedEvents();
+      console.log("✅ Événements reçus :", events);
       setEvents(events);
       setError(false);
     } catch (error) {

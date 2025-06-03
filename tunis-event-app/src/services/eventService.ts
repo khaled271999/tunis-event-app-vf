@@ -6,6 +6,8 @@ import { PublicEventsService } from "@/api-sdk-backend";
 import { API_BASE_URL } from "../config";
 
 OpenAPI.BASE = API_BASE_URL;
+console.log("📡 API_BASE_URL utilisé par OpenAPI:", API_BASE_URL);
+
 export const fetchCombinedEvents = async () => {
   try {
     const responsePublic = await fetch(

@@ -13,9 +13,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { Badge } from "@/components/ui/badge";
 import { Event } from "@/types/event";
+import { API_BASE_URL } from "@/config"; // ou le bon chemin selon ton projet
 
 // 🔁 À externaliser plus tard dans une variable d’environnement
-const API_URL = "http://localhost:3000/participant/mes-evenements";
+const API_URL = `${API_BASE_URL}/participant/mes-evenements`;
 
 const ParticipantEventsPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
